@@ -99,11 +99,7 @@ $("submit").addEventListener("click",async()=>{
   const {data,error}=await client.rpc("register_sensory_team",{p_topic_id:topicId,p_seat_numbers:seats.map(Number)});
   $("submit").disabled=false;
   if(error){
-    const msg=(error.message||"").toLowerCase();
-    if(msg.includes("already registered"))showMessage("One or more seat numbers have already been registered. Please check the numbers.","err");
-    else if(msg.includes("full"))showMessage("This topic is already full. Please choose another topic.","err");
-    else if(msg.includes("seat number"))showMessage("One or more seat numbers are outside the allowed ranges.","err");
-    else showMessage(error.message||"Registration failed. Please try again.","err");
+    showMessage(error.message || "Registration failed.", "err");
     return;
   }
   showMessage("Team registered successfully! Your team has been saved.","ok");

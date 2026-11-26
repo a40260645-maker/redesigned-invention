@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sensory Assignment Registration | Cairo Physical Therapy</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#141c31;--line:#293653;--muted:#aab6ce;--accent:#8bafff;--good:#65d6a2;--bad:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#1d3155 0,transparent 42%),var(--bg);color:#f4f7ff;font:16px/1.55 system-ui,Arial,sans-serif}
+main{max-width:980px;margin:auto;padding:28px 18px 60px}.hero{text-align:center;padding:28px 0 18px}.eyebrow{color:var(--accent);font-weight:700;letter-spacing:2px;font-size:12px}.hero h1{font-size:clamp(28px,5vw,44px);line-height:1.1;margin:12px 0}.hero p,.muted{color:var(--muted)}
+.panel,.topic{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;margin:16px 0}.panel h2{margin:0 0 8px}.notice{border-left:3px solid var(--accent);padding:10px 14px;background:#1a2740;border-radius:8px;color:#e4ebff}
+.topics{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.topic{margin:0;padding:17px}.topic h3{font-size:17px;margin:0 0 12px}.count{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}.meter{height:7px;background:#26324b;border-radius:9px;overflow:hidden;margin-top:8px}.fill{height:100%;background:var(--good);border-radius:9px}
+label{display:block;font-size:14px;color:#dce5f8;margin:12px 0 6px}input,select{width:100%;background:#0c1427;border:1px solid #344463;color:#fff;border-radius:10px;padding:12px;font:inherit}input:focus,select:focus{outline:2px solid var(--accent);border-color:transparent}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}button{border:0;border-radius:10px;padding:12px 17px;font-weight:700;cursor:pointer;background:var(--accent);color:#10182b}button.secondary{background:#263653;color:#eaf0ff}button:disabled{opacity:.45;cursor:not-allowed}.message{margin-top:14px;padding:12px;border-radius:10px;display:none}.message.ok{display:block;background:#123b32;color:#a8f3d0}.message.err{display:block;background:#421f2a;color:#ffc1c1}
+.rules{padding-left:22px}.rules li{margin:8px 0;color:#dce5f8}.small{font-size:13px;color:var(--muted)}.footer{text-align:center;margin-top:28px;color:var(--muted);font-size:13px}
+</style></head>
+<body><main>
+<header class="hero"><div class="eyebrow">CAIRO UNIVERSITY · FACULTY OF PHYSICAL THERAPY</div><h1>Sensory Assignment Registration</h1><p>Choose one topic for your team · Maximum 7 teams per topic</p></header>
+<section class="panel">
+<h2>Available topics</h2><p class="muted">Each topic can be selected by up to 7 teams. The number of available places updates after registration.</p>
+<div id="topics" class="topics"><p class="muted">Loading topics…</p></div>
+</section>
+<section class="panel">
+<h2>Register your team</h2>
+<div class="notice"><strong>Important:</strong> Any team member can register the team. Enter the seat numbers of all team members. Each seat number can be registered only once across the entire website.</div>
+<label for="topic">Choose your topic</label><select id="topic"><option value="">Loading topics…</option></select>
+<label>Team members' seat numbers (7–10 students)</label>
+<div id="members" class="grid"></div>
+<div class="actions"><button type="button" class="secondary" id="add">+ Add member</button><button type="button" id="submit">Register team</button></div>
+<div id="message" class="message" role="status"></div>
+<p class="small">Allowed seat-number ranges: 1980–2000, 2001–2307, 2400–2422, 2500–2509.</p>
+</section>
+<section class="panel">
+<h2>Assignment instructions</h2>
+<ol class="rules">
+<li>For each of the above topics, no more than 7 groups are allowed to take the same topic.</li>
+<li>Number of group members: 7-10 members.</li>
+<li>The assignment will be submitted in a PRINTED PowerPoint presentation form.</li>
+<li>The 1st slide will be your names ordered and with the role of each member (can work in pairs).</li>
+<li>The last slide will be for references.</li>
+<li>The whole presentation should not exceed 15 slides</li>
+<li>Pictures and diagrams are acceptable and preferable.</li>
+<li>Assignment submission will be on 14th of December which will be our last lecture day.</li>
+<li>No submissions will be accepted after the deadline which is December 14th.</li>
+</ol>
+</section>
+<footer class="footer">Sensory Assignment · Cairo Physical Therapy</footer>
+</main>
+<script>
+const SUPABASE_URL = "https://uttwzqhmrcbnxuazgefd.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV0dHd6cWhtcmNibnh1YXpnZWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIwODI4MTQsImV4cCI6MjEwNzY1ODgxNH0.5sNuvuXwRvqD3JX9w6TvWP7YtZ3ivvgSIlPALnM0pdk";
+const topics = [
+"1. Hemisection of the spinal cord (Brown Sequard syndrome): causes, manifestations and treatment",
+"2. Tabes Dorsalis: Cause, symptoms, complications, treatment",
+"3. Herpes Zoster: Cause, symptoms, treatment",
+"4. Sensory lesions in diabetes mellitus: Mechanism, symptoms, treatment",
+"5. Syringomyelia: Cause, symptoms, treatment options"
+];
+const $ = id => document.getElementById(id);
+let client = null, topicRows = [], memberCount = 7;
+function showMessage(text, type){const el=$("message");el.textContent=text;el.className="message "+type}
+function renderMembers(){
+  $("members").innerHTML="";
+  for(let i=0;i<memberCount;i++){
+    const wrap=document.createElement("div"), label=document.createElement("label"), input=document.createElement("input");
+    label.textContent=`Member ${i+1}`; label.htmlFor=`seat${i}`;
+    input.id=`seat${i}`;input.inputMode="numeric";input.autocomplete="off";input.placeholder="Seat number";
+    input.maxLength=4;input.addEventListener("input",()=>{input.value=input.value.replace(/\D/g,"").slice(0,4)});
+    wrap.append(label,input);$("members").append(wrap);
+  }
+  $("add").disabled=memberCount>=10;
+}
+function renderTopics(){
+  $("topics").innerHTML="";$("topic").innerHTML='<option value="">Select a topic</option>';
+  topicRows.forEach(t=>{
+    const count=Number(t.team_count||0), full=count>=7;
+    const card=document.createElement("article");card.className="topic";
+    const h=document.createElement("h3");h.textContent=t.title;card.append(h);
+    const meta=document.createElement("div");meta.className="count";meta.innerHTML=`<span>${count} / 7 teams registered</span><strong>${full?"FULL":`${7-count} available`}</strong>`;card.append(meta);
+    const meter=document.createElement("div");meter.className="meter";const fill=document.createElement("div");fill.className="fill";fill.style.width=`${count/7*100}%`;meter.append(fill);card.append(meter);$("topics").append(card);
+    const option=document.createElement("option");option.value=t.id;option.textContent=`${t.title} (${count}/7)`;option.disabled=full;$("topic").append(option);
+  });
+}
+async function loadTopics(){
+  if(!client){$("topics").textContent="Add your Supabase URL and anon key in index.html to connect the registration database.";return}
+  const {data,error}=await client.from("assignment_topic_counts").select("id,title,team_count").order("id");
+  if(error){$("topics").textContent="Could not load topics. Check your Supabase setup.";return}
+  topicRows=data||[];renderTopics();
+}
+$("add").addEventListener("click",()=>{if(memberCount<10){memberCount++;renderMembers()}});
+$("submit").addEventListener("click",async()=>{
+  if(!client){showMessage("Connect Supabase first by adding the project URL and anon key in index.html.","err");return}
+  const topicId=Number($("topic").value);
+  const seats=Array.from({length:memberCount},(_,i)=>$(`seat${i}`).value.trim());
+  if(!topicId){showMessage("Please choose a topic.","err");return}
+  if(seats.some(x=>!x)){showMessage("Please enter all seat numbers. Your team must have 7–10 members.","err");return}
+  if(new Set(seats).size!==seats.length){showMessage("A seat number is repeated within this team. Please check the numbers.","err");return}
+  $("submit").disabled=true;showMessage("Registering your team…","ok");
+  const {data,error}=await client.rpc("register_sensory_team",{p_topic_id:topicId,p_seat_numbers:seats.map(Number)});
+  $("submit").disabled=false;
+  if(error){
+    const msg=(error.message||"").toLowerCase();
+    if(msg.includes("already registered"))showMessage("One or more seat numbers have already been registered. Please check the numbers.","err");
+    else if(msg.includes("full"))showMessage("This topic is already full. Please choose another topic.","err");
+    else if(msg.includes("seat number"))showMessage("One or more seat numbers are outside the allowed ranges.","err");
+    else showMessage(error.message||"Registration failed. Please try again.","err");
+    return;
+  }
+  showMessage("Team registered successfully! Your team has been saved.","ok");
+  $("topic").value="";memberCount=7;renderMembers();await loadTopics();
+});
+renderMembers();
+if(SUPABASE_URL.startsWith("https://") && SUPABASE_ANON_KEY!=="YOUR_SUPABASE_ANON_KEY"){
+  client=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);loadTopics();
+}else{loadTopics()}
+</script></body></html>

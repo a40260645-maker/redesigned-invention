@@ -102,7 +102,7 @@ $("submit").addEventListener("click",async()=>{
     const msg=(error.message||"").toLowerCase();
     if(msg.includes("already registered"))showMessage("One or more seat numbers have already been registered. Please check the numbers.","err");
     else if(msg.includes("full"))showMessage("This topic is already full. Please choose another topic.","err");
-    else if(msg.includes("seat number"))showMessage("One or more seat numbers are outside the allowed ranges.","err");
+    showMessage("One or more seat numbers are outside the allowed ranges.","err");
     else showMessage(error.message||"Registration failed. Please try again.","err");
     return;
   }
